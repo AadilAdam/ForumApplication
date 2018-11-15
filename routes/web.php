@@ -20,7 +20,8 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+//Route::get('/threads/create', 'ThreadsController@create');
+//Route::get('/threads/{thread}', 'ThreadsController@show');
+Route::resource('threads', 'ThreadsController');
 
-Route::get('/threads', 'ThreadsController@index');
-
-Route::get('/threads/{thread}', 'ThreadsController@show');
+Route::post('/threads/{thread}/replies', 'RepliesController@store');
