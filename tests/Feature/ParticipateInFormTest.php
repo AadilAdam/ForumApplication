@@ -8,10 +8,8 @@ use Tests\TestCase;
 
 class ParticipateInThreadsTest extends TestCase
 {
-    use DatabaseMigrations;
 
-
-    function unauthenticated_users_may_not_add_replies()
+    function test_unauthenticated_users_may_not_add_replies()
     {
         $this->expectException('Illuminate\Auth\AuthenticationException');
 
@@ -20,14 +18,18 @@ class ParticipateInThreadsTest extends TestCase
 
 
 
-    function authenticated_user_participate_forum_threads()
+    function test_authenticated_user_participate_forum_threads()
     {
+        //given authenticated user
         $this->be($user = factory('App\User')->create());
 
+        //have existing thread
         $thread = factory('App\Thread')->create();
 
+        // we need a reply, set up from
         $reply = factory('App\Reply')->make();
 
+        //adds a reply to a thread, post it on the page
         $this->post($thread->path() . '/replies', $reply->toArray());
 
         $this->get($thread->path())->assertSee($reply->body);
