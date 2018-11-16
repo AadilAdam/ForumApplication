@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Thread;
+use App\Channel;
 use Illuminate\Http\Request;
+use Auth;
 
 class ThreadsController extends Controller
 {
@@ -13,7 +15,7 @@ class ThreadsController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth')->only(['create', 'store']);
+        $this->middleware('auth')->except(['index', 'show']);
     }
 
     /**
@@ -21,10 +23,17 @@ class ThreadsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index($channelSlug = null)
     {
+        if ($channelSlug)
+        {
+            $channelId = Channel::where('slug' , $channelSlug)->first()->id;
+            $threads = Thread::where('channel_id', $channelSlug)->latest()->get();
 
-        $threads = Thread::latest()->get();
+        } else {
+            
+            $threads = Thread::latest()->get();
+        }
 
         return view('threads.index', compact('threads'));
 
@@ -48,14 +57,25 @@ class ThreadsController extends Controller
      */
     public function store(Request $request)
     {
-        //dd($request);
+
+        //validate that the title attribute is required.
+        $this->validate($request, [
+            'title' => 'required',
+            'body' => 'required',
+            'channel_id' => 'required|channels, id'
+        ]);
+
+        //dd($request->all());
         $thread = Thread::create([
-            //'user_id' => auth()->id(),
+            'user_id' => Auth::user()->id,
+            'channel_id' =>request('channel_id'),
             'title' => $request->input('title'),
             'body' => $request->input('body')
         ]);
 
-        return redirect($thread->path());
+        Session::flash('flash_message', 'Thread successfully added!');
+
+        return redirect('/threads');
     }
 
     /**
@@ -64,7 +84,7 @@ class ThreadsController extends Controller
      * @param  \App\Thread  $thread
      * @return \Illuminate\Http\Response
      */
-    public function show(Thread $thread)
+    public function show($channelId, Thread $thread)
     {
         return view('threads.show', compact('thread'));
     }
