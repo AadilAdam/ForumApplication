@@ -6,6 +6,7 @@ use App\Thread;
 use App\Channel;
 use Illuminate\Http\Request;
 use Auth;
+use App\Filters\ThreadFilters;
 
 class ThreadsController extends Controller
 {
@@ -23,18 +24,35 @@ class ThreadsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index($channelSlug = null)
+    public function index(Channel $channel, ThreadFilters $filters)
     {
-        if ($channelSlug)
+        //$threads = $this->getThreads($channel);
+        
+
+        /*if ($channel->exists)
         {
-            $channelId = Channel::where('slug' , $channelSlug)->first()->id;
-            $threads = Thread::where('channel_id', $channelSlug)->latest()->get();
+            //dd($channel);
+            $threads = $channel->threads()->latest();
+            //dd($threads);
 
         } else {
             
-            $threads = Thread::latest()->get();
+            //dd($channel);
+            $threads = Thread::latest();
         }
 
+        if($username = request('by'))
+        {
+            $user = Thread::where('name', $username)->firstOrFail();
+
+            $threads->where('user_id', $user->id);
+        }
+        //dd($threads);
+        $threads = $threads->get();*/
+
+        //return view('threads.index', compact('threads'));
+
+        $threads = $this->getThreads($channel, $filters);
         return view('threads.index', compact('threads'));
 
     }
@@ -62,12 +80,12 @@ class ThreadsController extends Controller
         $this->validate($request, [
             'title' => 'required',
             'body' => 'required',
-            'channel_id' => 'required|channels, id'
+            'channel_id' => 'required|exists:channels, id'
         ]);
 
         //dd($request->all());
         $thread = Thread::create([
-            'user_id' => Auth::user()->id,
+            'user_id' => auth()->id,
             'channel_id' =>request('channel_id'),
             'title' => $request->input('title'),
             'body' => $request->input('body')
@@ -75,7 +93,7 @@ class ThreadsController extends Controller
 
         Session::flash('flash_message', 'Thread successfully added!');
 
-        return redirect('/threads');
+        return redirect($thread->path());
     }
 
     /**
@@ -86,7 +104,11 @@ class ThreadsController extends Controller
      */
     public function show($channelId, Thread $thread)
     {
-        return view('threads.show', compact('thread'));
+
+        return view('threads.show', [
+            'thread' => $thread,
+            'replies' => $thread->replies()->paginate(25)
+        ]);
     }
 
     /**
@@ -122,4 +144,24 @@ class ThreadsController extends Controller
     {
         //
     }
+
+    /**
+     * Fetch all relevant threads.
+     *
+     * @param Channel       $channel
+     * @param ThreadFilters $filters
+     * @return mixed
+     */
+    protected function getThreads(Channel $channel, ThreadFilters $filters)
+    {
+        $threads = Thread::latest()->filter($filters);
+
+
+        if ($channel->exists) {
+            $threads->where('channel_id', $channel->id);
+        }
+
+        return $threads->get();
+    }
+
 }
