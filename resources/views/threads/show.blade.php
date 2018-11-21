@@ -19,12 +19,15 @@
             @endforeach
             </div>
 
+            {{ $replies->links() }}
+
 
             @if (auth()->check())
             <div class="row">
                 <div class="col-md-8">
                     <form method="POST" action="{{ $thread->path() . '/replies' }}">
                         {{ csrf_field() }}
+
                         <div class="form-group">
                             <textarea rows="5" placeholder="please enter your text" class="form-control" name="reply" id="reply"> </textarea>
                         </div>

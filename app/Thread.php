@@ -62,7 +62,8 @@ class Thread extends Model
      */
     public function replies()
     {
-        return $this->hasMany(Reply::class);
+        return $this->hasMany(Reply::class)
+            ->withCount('favorites')->with('owner');
     }
     /**
      * Add a reply to the thread.
@@ -71,7 +72,7 @@ class Thread extends Model
      */
     public function addReply($reply)
     {
-        $this->replies()->create($reply);
+        return $this->replies()->create($reply);
     }
     
 

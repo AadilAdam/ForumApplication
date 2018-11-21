@@ -37,3 +37,8 @@ Route::post('threads', 'ThreadsController@store');
  * Reply resource routes.
  */
 Route::post('/threads/{channel}/{thread}/replies', 'RepliesController@store');
+
+/**
+ * favorites resource routes.
+ */
+Route::post('/replies/{reply}/favorites', 'FavoritesController@store');

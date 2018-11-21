@@ -17,20 +17,23 @@ class RepliesController extends Controller
     }
 
 
-    public function store($channelId, Thread $thread)
+    public function store ($channelId, Thread $thread)
     {
         //associate a reply to a thread.
         //do the reply to the thread with the user id.
 
         //validate that the title attribute is required.
         $this->validate(request(), [
-            'body' => 'required'
+            'reply' => 'required'
         ]);
 
         $thread->addReply([
-            'body' => request('body'),
+            'body' => request('reply'),
             'user_id' => auth()->id()
         ]);
+
+        
+        //dd($thread);
 
         return back();
     }

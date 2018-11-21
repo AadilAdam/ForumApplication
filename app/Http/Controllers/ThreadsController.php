@@ -53,6 +53,11 @@ class ThreadsController extends Controller
         //return view('threads.index', compact('threads'));
 
         $threads = $this->getThreads($channel, $filters);
+
+        if (request()->wantsJson()) {
+            return $threads;
+        }
+
         return view('threads.index', compact('threads'));
 
     }
@@ -154,7 +159,7 @@ class ThreadsController extends Controller
      */
     protected function getThreads(Channel $channel, ThreadFilters $filters)
     {
-        $threads = Thread::latest()->filter($filters);
+        $threads = Thread::with('channel')->latest()->filter($filters);
 
 
         if ($channel->exists) {
