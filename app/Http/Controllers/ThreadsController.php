@@ -16,7 +16,8 @@ class ThreadsController extends Controller
      */
     public function __construct()
     {
-        $this->middleware('auth')->except(['index', 'show']);
+        //$this->middleware('auth')->except(['index', 'show']);
+        $this->middleware('auth');
     }
 
     /**
@@ -159,7 +160,7 @@ class ThreadsController extends Controller
      */
     protected function getThreads(Channel $channel, ThreadFilters $filters)
     {
-        $threads = Thread::with('channel')->latest()->filter($filters);
+        $threads = Thread::latest()->filter($filters);
 
 
         if ($channel->exists) {

@@ -15,18 +15,16 @@ class ThreadsTest extends TestCase
     {
         parent::setUp();
 
-
         $this->thread = factory('App\Thread')->create();
     }
 
     /**
-     * A test example.
+     * A test example. Browse all threads.
      *
      * @return void
      */
     public function test_user_browse_all_threads()
     {
-        
         $response = $this->get('/threads');
         $response->assertSee($this->thread->title);
     }
@@ -39,15 +37,18 @@ class ThreadsTest extends TestCase
     */
     public function test_user_browse_single_thread()
     {
-
         $response = $this->get($this->thread->path());
         $response->assertSee($this->thread->title);
     }
-
+    
+    /**
+     * 
+     */
     public function test_user_cn_read_replies_of_single_thread()
     {
         //each thraed will have many replies
-        $reply = factory('App\Reply')->create(['thread_id' => $this->thread->id]);
+        $reply = factory('App\Reply')
+            ->create(['thread_id' => $this->thread->id]);
         //each thread should display on new page when clicked
         $response = $this->get('/threads/' . $this->thread->id);
 
@@ -65,5 +66,19 @@ class ThreadsTest extends TestCase
         $this->get('/threads' . $channel->slug)
             ->assertSee($threadInChannel->title)
             ->assertDontSee($hreadInChannel->title);
+    }
+
+    public function test_user_can_view_threads_by_username()
+    {
+        //
+    }
+
+    function test_user_can_filter_threads_by_popularity()
+    {
+        //given the threads with replies count,
+        // we can filter them by popularity
+        $response = $this->getJson('threads?popular=1')->json();
+
+        //then they should return from most replies to leats replies.
     }
 }
