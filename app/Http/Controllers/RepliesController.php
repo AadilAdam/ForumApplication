@@ -32,9 +32,6 @@ class RepliesController extends Controller
             'user_id' => auth()->id()
         ]);
 
-        
-        //dd($thread);
-
         return back();
     }
 

@@ -18,17 +18,21 @@ class FavoritesTest extends TestCase
     /** @test */
     public function test_authenticated_user_favorite_reply()
     {
-        //$this->signIn();
-        //$reply = create('App\Reply');
+        $this->signIn();
+        $reply = create('App\Reply');
+
         $this->post('replies/' . $reply->id . '/favorites');
+
         $this->assertCount(1, $reply->favorites);
     }
 
     /** @test */
     public function test_authenticated_user_may_favorite_reply_once()
     {
-        //$this->signIn();
-        //$reply = create('App\Reply');
+        $this->signIn();
+        $reply = create('App\Reply');
+
+
         try {
             $this->post('replies/' . $reply->id . '/favorites');
             $this->post('replies/' . $reply->id . '/favorites');
