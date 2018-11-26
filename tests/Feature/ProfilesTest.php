@@ -22,23 +22,23 @@ class ProfilesTest extends TestCase
     public function testUserHasProfile()
     {
         $user = create('App\User');
-
-        $response = $this->get('/profiles/{$user->name }');
-
-        $response->assertSee($user->name);
+        $this->get("/profiles/{$user->name}")
+            ->assertSee($user->name);
     }
 
-    function testDisplayallThreadsbyUser()
+    function testDisplayAllThreadsbyUser()
     {
-        $user = create('App\User');
+        $this->signIn();
 
-        create('App\Thread', ['user_id', $user->id]);
+        $thread = create('App\Thread', [
+            'user_id' => auth()->id()
+        ]);
 
-        $response = $this->get('/profiles/{$user->name}');
-
-        $response->assertSee($thread->title)
+        $this->get("/profiles/" . auth()->user()->name)
+            ->assertSee($thread->title)
             ->assertSee($thread->body);
 
 
     }
+
 }
