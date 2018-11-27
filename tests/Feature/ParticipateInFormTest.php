@@ -42,4 +42,77 @@ class ParticipateInThreadsTest extends TestCase
         $this->get($thread->path())->assertSee($reply->body);
     }
 
+    function testReplyRequiresBody()
+    {
+        $this->withExceptionHandling();
+        $this->signIn();
+
+        $thread = create('App\Thread');
+
+        $reply = make('App\Reply', ['body' => null]);
+
+        $this->post($thread->path() . '/replies', $reply->toArray())
+            ->assertSessionHasErrors('body');
+
+    }
+
+    public function testUnauthorizedUserscantDeleteReplies()
+    {
+        $this->withExceptionHandling();
+
+        $reply = create('App\Reply');
+
+        $this->delete("/replies/{$reply->id}")
+            ->assertRedirect("/login");
+
+        $this->signIn()
+            ->delete("/replies/{$reply->id}")
+            ->assertStatus(403);
+        
+    }
+
+    
+
+    public function testAuthorizedUserCanDeleteReplies()
+    {
+        $this->signIn();
+
+        $reply = create('App\Reply', ['user_id' => auth()->id()]);
+
+        $this->delete("/replies/{$reply->id}")->assertStatus(302);
+
+        $this->assertDatabaseMissing('replies', ['id' => $reply->id]);
+
+    }
+
+    /** @test */
+    function testUnauthorizedUsersCantUpdateReplies()
+    {
+        $this->withExceptionHandling();
+
+        $reply = create('App\Reply');
+
+        $this->patch("/replies/{$reply->id}")
+            ->assertRedirect('login');
+        
+        $this->signIn()
+            ->patch("/replies/{$reply->id}")
+            ->assertStatus(403);
+    }
+
+     /** @test */
+    function testAuthorizedUsersCanUpdateReplies()
+    {
+        $this->signIn();
+
+        $reply = create('App\Reply', ['user_id' => auth()->id()]);
+
+
+        $updatedReply = 'You been changed.';
+
+        $this->patch("/replies/{$reply->id}", ['body' => $updatedReply]);
+        
+        $this->assertDatabaseHas('replies', ['id' => $reply->id, 'body' => $updatedReply]);
+    }
+
 }

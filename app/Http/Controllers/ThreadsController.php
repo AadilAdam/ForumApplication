@@ -73,7 +73,8 @@ class ThreadsController extends Controller
 
         //Session::flash('flash_message', 'Thread successfully added!');
 
-        return redirect($thread->path());
+        return redirect($thread->path())
+            ->with('flash', 'Your thread has been published.');
     }
 
     /**

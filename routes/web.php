@@ -32,6 +32,8 @@ Route::get('threads/{channel}', 'ThreadsController@index');
  * Reply resource routes.
  */
 Route::post('/threads/{channel}/{thread}/replies', 'RepliesController@store');
+Route::delete("/replies/{reply}", 'RepliesController@destroy');
+Route::patch("/replies/{reply}", 'RepliesController@update');
 
 /**
  * favorites resource routes.
