@@ -18,6 +18,11 @@ class Reply extends Model
     protected $with = ['owner', 'favorites'];
 
     /**
+     * Whenever we cast to a json, used if we want to append any custom attribute to json.
+     */
+    protected $appends = ['favoritesCount', 'isFavorited'];
+
+    /**
      * A reply has an owner.
      *
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo

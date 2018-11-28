@@ -39,6 +39,7 @@ Route::patch("/replies/{reply}", 'RepliesController@update');
  * favorites resource routes.
  */
 Route::post('/replies/{reply}/favorites', 'FavoritesController@store');
+Route::delete('/replies/{reply}/favorites', 'FavoritesController@destroy');
 
 /**
  * profile related routes.

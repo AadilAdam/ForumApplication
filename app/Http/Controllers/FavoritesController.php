@@ -90,6 +90,7 @@ class FavoritesController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $reply->unfavorite();
+        
     }
 }
