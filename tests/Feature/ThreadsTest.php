@@ -44,55 +44,60 @@ class ThreadsTest extends TestCase
         $response->assertSee($this->thread->title);
     }
     
-    /**
-     * 
-     */
-    public function test_user_cn_read_replies_of_single_thread()
-    {
-        $this->signIn();
-        //each thraed will have many replies
-        $reply = create('App\Reply', ['thread_id' => $this->thread->id]);
-
-        //each thread should display on new page when clicked
-        $response = $this->get($this->thread->path());
-
-        //new page should show a thread and all its replies.
-        $response->assertSee($reply->body);
-
-    }
-
+    
     /**
      * 
      */
     public function test_user_filter_threads_on_channels()
     {
-        $this->signIn();
+        //$this->signIn();
         $channel= create('App\Channel');
 
         $threadInChannel = create('App\Thread', ['channel_id' => $channel->id]);
         $threadNotChannel = create('App\Thread');
-        $this->get('/threads' . $channel->slug)
+        $this->get('/threads/' . $channel->slug)
             ->assertSee($threadInChannel->title)
-            ->assertDontSee($hreadInChannel->title);
+            ->assertDontSee($threadNotChannel->title);
     }
 
-    /**
-     * 
-     */
-    public function test_user_can_view_threads_by_username()
-    {
-        //
-    }
-
-    /**
-     * 
-     */
+    /** @test */
     function test_user_can_filter_threads_by_popularity()
     {
-        //given the threads with replies count,
-        // we can filter them by popularity
+        $threadWithTwoReplies = create('App\Thread');
+        create('App\Reply', ['thread_id' => $threadWithTwoReplies->id], 2);
+
+        $threadWithThreeReplies = create('App\Thread');
+        create('App\Reply', ['thread_id' => $threadWithThreeReplies->id], 3);
+
+        $threadWithNoReplies = $this->thread;
+
         $response = $this->getJson('threads?popular=1')->json();
 
-        //then they should return from most replies to leats replies.
-    }
+        $this->assertEquals([3, 2, 0], array_column($response, 'replies_count'));
+   }
+
+   /**
+    * @test
+    */
+   function test_user_filter_threads_by_those_notanswered()
+   {
+        $thread = create('App\Thread');
+        create('App\Reply', ['thread_id' => $thread->id]);
+
+        $response = $this->getJson('threads?unanswered=1')->json();
+        $this->assertCount(1, $response);
+
+   }
+
+    /** @test */
+    function test_user_can_request_all_replies_for_a_given_thread()
+    {
+        $thread = create('App\Thread');
+        create('App\Reply', ['thread_id' => $thread->id], 1);
+
+        $response = $this->getJson($thread->path() . '/replies')->json();
+
+        $this->assertCount(1, $response['data']);
+        $this->assertEquals(1, $response['total']);
+     }
 }

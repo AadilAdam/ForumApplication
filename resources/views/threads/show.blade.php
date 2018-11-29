@@ -28,7 +28,9 @@
                     </div>
                 </div>
 
-                <replies :data="{{ $thread->replies }}" 
+                <!-- we are making the replies component responsible for fetching all the data, 
+                rather than server side pass the data to it. -->
+                <replies
                     @added="repliesCount++"
                     @removed="repliesCount--"></replies>
 

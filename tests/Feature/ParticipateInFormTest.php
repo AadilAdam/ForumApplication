@@ -11,18 +11,11 @@ class ParticipateInThreadsTest extends TestCase
 
     public function test_unauthenticated_users_not_add_replies()
     {
-        $this->expectException('Illuminate\Auth\AuthenticationException');
-
-        //$thread = factory('App\Thread')->create();
-
-        // we need a reply, set up from
-        //$reply = factory('App\Reply')->create();
-
+        $this->withExceptionHandling();
         //$this->post('/threads/1/replies', []);
-        $this->post($thread->path() . '/replies', []);
+        $this->post('/threads/some-channel/1/replies', [])
+            ->assertRedirect('/login');
     }
-
-
 
     public function test_authenticated_user_participate_forum_threads()
     {
@@ -39,7 +32,7 @@ class ParticipateInThreadsTest extends TestCase
         //adds a reply to a thread, post it on the page
         $this->post($thread->path() . '/replies', $reply->toArray());
 
-        $this->get($thread->path())->assertSee($reply->body);
+        $this->assertDatabaseHas('replies', ['body' => $reply->body]);
     }
 
     function testReplyRequiresBody()
