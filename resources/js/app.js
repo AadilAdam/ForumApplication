@@ -21,6 +21,7 @@ Vue.component('example-component', require('./components/ExampleComponent.vue'))
 Vue.component('reply', require('./components/Reply.vue'));
 Vue.component('favorite', require('./components/Favorite.vue'));
 Vue.component('thread-view', require('./pages/Thread.vue'));
+//Vue.component('new-reply', require('./components/NewReply.vue'));
 
 // const files = require.context('./', true, /\.vue$/i)
 

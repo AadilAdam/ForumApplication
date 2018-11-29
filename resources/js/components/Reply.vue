@@ -17,7 +17,7 @@
         <div class="card-body">
             <div v-if="editing">
                 <div class="form-group">
-                    <textarea class="form-control" name="" id="" rows="3" v-model="body"></textarea>
+                    <textarea class="form-control" v-model="body"></textarea>
                 </div>
                 <button class="btn btn-sm btn-primary" @click="update">Update</button>
                 <button class="btn btn-sm btn-link" @click="editing = false">Cancel</button>
@@ -26,8 +26,8 @@
         </div>
 
         <div class="card-footer d-flex" v-if="canUpdate">
-            <button type="button" class="btn btn-secondary btn-sm mr-1" @click="editing = true">Edit</button>
-            <button type="button" class="btn btn-danger btn-sm mr-1" @click="destroy">Delete</button>
+            <button class="btn btn-secondary btn-sm mr-1" @click="editing = true">Edit</button>
+            <button class="btn btn-danger btn-sm mr-1" @click="destroy">Delete</button>
         </div>
     </div>
 </template>
@@ -50,10 +50,10 @@
         },
 
         computed: {
-            signedIn(){
+            signedIn() {
                 return window.App.signedIn;
             },
-
+            
             canUpdate() {
                 return this.authorize(user => this.data.user_id == user.id);
             }
@@ -74,9 +74,7 @@
                 axios.delete('/replies/' + this.data.id);
 
                 this.$emit('deleted', this.data.id);
-
             }
-        }
-        
+        }   
     }
 </script>

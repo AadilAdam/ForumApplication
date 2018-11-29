@@ -25,14 +25,17 @@ class RepliesController extends Controller
 
         //validate that the title attribute is required.
         $this->validate(request(), [
-            'reply' => 'required'
+            'body' => 'required'
         ]);
 
-        $thread->addReply([
-            'body' => request('reply'),
+        $reply = $thread->addReply([
+            'body' => request('body'),
             'user_id' => auth()->id()
         ]);
 
+        if (request()->expectsJson()) {
+            return $reply->load('owner');
+        }
         return back()->with('flash', 'Yor reply has been added to the thread.');
     }
 
