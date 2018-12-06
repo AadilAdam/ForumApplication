@@ -43,6 +43,11 @@
                         {{ $thread->created_at->diffForHumans() }}, and currently has 
                         <span v-text="repliesCount"></span>
                         {{ str_plural('comment', $thread->replies_count) }}.
+
+                        <div>
+                            <subscribe-button :active="{{ json_encode($thread->isSubscribedTo) }}"></subscribe-button>
+                        </div>
+
                     </div>
                 </div>
             </div>

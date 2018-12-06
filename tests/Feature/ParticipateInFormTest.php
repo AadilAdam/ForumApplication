@@ -33,6 +33,7 @@ class ParticipateInThreadsTest extends TestCase
         $this->post($thread->path() . '/replies', $reply->toArray());
 
         $this->assertDatabaseHas('replies', ['body' => $reply->body]);
+        $this->assureEquals(1, $thread->fresh()->replies_count);
     }
 
     function testReplyRequiresBody()

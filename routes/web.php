@@ -47,3 +47,15 @@ Route::delete('/replies/{reply}/favorites', 'FavoritesController@destroy');
  */
 //Route::get('/profiles/{user}', 'ProfilesController@show');
 Route::get('/profiles/{user}', 'ProfilesController@show')->name('profile');
+
+
+Route::delete('/profiles/{user}/notifications/{notification}', 'UserNotificationsController@destroy');
+Route::get('/profiles/{user}/notifications', 'UserNotificationsController@index');
+
+/**
+ * 
+ * Thread subcriptions route.
+ */
+
+Route::post('/threads/{channel}/{thread}/subscriptions', 'ThreadSubcriptionController@store')->middleware('auth');
+Route::delete('/threads/{channel}/{thread}/subscriptions', 'ThreadSubcriptionController@destroy')->middleware('auth');

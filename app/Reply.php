@@ -18,6 +18,29 @@ class Reply extends Model
     protected $with = ['owner', 'favorites'];
 
     /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        /**
+         * When deleting a thread, we are deleting the associated replies also.
+         */
+        static::created(function ($reply) {
+            $reply->thread->increment('replies_count'); // psuedo class
+        });
+
+        /**
+         * When deleting a thread, we are deleting the associated replies also.
+         */
+        static::deleted(function ($reply) {
+            $reply->thread->increment('replies_count'); // psuedo class
+        });
+
+    }
+
+    /**
      * Whenever we cast to a json, used if we want to append any custom attribute to json.
      */
     protected $appends = ['favoritesCount', 'isFavorited'];

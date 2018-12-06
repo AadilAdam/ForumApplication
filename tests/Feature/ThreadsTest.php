@@ -99,5 +99,5 @@ class ThreadsTest extends TestCase
 
         $this->assertCount(1, $response['data']);
         $this->assertEquals(1, $response['total']);
-     }
+    }
 }
