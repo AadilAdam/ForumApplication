@@ -38,6 +38,9 @@
         methods: {
             addReply() {
                 axios.post(location.pathname + '/replies', { body: this.body })
+                    .catch(error => {
+                        flash(error.response.data);
+                    })
                     .then(({data}) => {
                         this.body = '';
                         

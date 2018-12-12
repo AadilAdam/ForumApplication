@@ -23,14 +23,19 @@ class ReplyPolicy
     }
 
     /**
-     * Determine whether the user can create replies.
+     * Determine if the authenticated user has permission to create a new reply.
      *
-     * @param  \App\User  $user
-     * @return mixed
+     * @param  User $user
+     * @return bool
      */
     public function create(User $user)
     {
-        //
+        if (! $lastReply = $user->fresh()->lastReply) {
+
+            return true;
+        }
+
+        return ! $lastReply->wasJustPublished();
     }
 
     /**

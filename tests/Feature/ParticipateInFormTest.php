@@ -33,7 +33,7 @@ class ParticipateInThreadsTest extends TestCase
         $this->post($thread->path() . '/replies', $reply->toArray());
 
         $this->assertDatabaseHas('replies', ['body' => $reply->body]);
-        $this->assureEquals(1, $thread->fresh()->replies_count);
+        $this->assertEquals(1, $thread->fresh()->replies_count);
     }
 
     function testReplyRequiresBody()
@@ -107,6 +107,50 @@ class ParticipateInThreadsTest extends TestCase
         $this->patch("/replies/{$reply->id}", ['body' => $updatedReply]);
         
         $this->assertDatabaseHas('replies', ['id' => $reply->id, 'body' => $updatedReply]);
+    }
+
+    function test_replies_that_contain_spam_not_created()
+    {
+        $this->withExceptionHandling();
+        $this->signIn();
+
+        //have existing thread
+        $thread = create('App\Thread');
+
+        // we need a reply, set up from
+        $reply = make('App\Reply', [
+            'body' => 'some invalid spam words.'
+        ]);
+
+        //adds a reply to a thread, post it on the page
+        $this->json('post', $thread->path() . '/replies', $reply->toArray())
+            ->assertStatus(422);
+    }
+
+    function test_user_may_add_reply_once_minute()
+    {
+        $this->withExceptionHandling();
+
+        $this->signIn();
+
+        //have existing thread
+        $thread = create('App\Thread');
+
+        // we need a reply, set up from
+        $reply = make('App\Reply', [
+            'body' => 'My simple reply.'
+        ]);
+
+        //adds a reply to a thread, post it on the page
+        $this->post($thread->path() . '/replies', $reply->toArray())
+            ->assertStatus(201);
+
+
+            //adds a reply to a thread, post it on the page
+        $this->post($thread->path() . '/replies', $reply->toArray())
+            ->assertStatus(429);
+
+
     }
 
 }

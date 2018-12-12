@@ -3,6 +3,8 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
+
 
 class Reply extends Model
 {
@@ -58,6 +60,24 @@ class Reply extends Model
     public function thread()
     {
         return $this->belongsTo(Thread::class);
+    }
+
+    public function wasJustPublished()
+    {
+        //if the created at time is greater than carbon now() time, then you are posting too soon.
+        return $this->created_at->gt(Carbon::now()->subMinute());
+    }
+
+    /**
+     * Fetch all mentioned users within the reply's body.
+     *
+     * @return array
+     */
+    public function mentionedUsers()
+    {
+        preg_match_all('/\@([^\s\.]+)/', $this->body, $matches);
+        
+        return $matches[1];
     }
 
 
