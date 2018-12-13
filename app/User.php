@@ -69,7 +69,7 @@ class User extends Authenticatable
         );
     }
 
-     /**
+    /**
      * Get the cache key for when a user reads a thread.
      *
      * @param  Thread $thread

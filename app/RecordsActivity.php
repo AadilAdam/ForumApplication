@@ -2,35 +2,37 @@
 
 namespace App;
 
+/**
+ * RecordsActivity.
+ */
 trait RecordsActivity
 {
     /**
      * Boot the trait.
+     * 
+     * @return
      */
     protected static function bootRecordsActivity()
     {
         if (auth()->guest()) return;
 
-        foreach (static::getActivitiesToRecord() as $event)
-        {
-            static::$event(function ($model) use ($event)
-            {
+        foreach (static::getActivitiesToRecord() as $event) {
+            static::$event(function ($model) use ($event) {
                 $model->recordActivity($event);
             });
         }
-
         /**
-         * when we are deleting any thread, we need to delete its activity in the process.also.
+         * When we are deleting any thread, 
+         * we need to delete its activity in the process.also.
          * Thread uses trait, so it uses the trait.
          * reply uses it and while deleting the thread, it also deletes it replies.
          * so ideally reply.php should use the trait.
-         * 
          */
         static::deleting(function ($model) {
             $model->activity()->delete();
         });
     }
-     /**
+    /**
      * Fetch all model events that require activity recording.
      *
      * @return array
@@ -40,12 +42,19 @@ trait RecordsActivity
         return ['created'];
     }
     
+    /**
+     * 
+     * 
+     */
     protected function recordActivity($event)
     {
-        $this->activity()->create([
-            'user_id' => auth()->id(),
-            'type' => $this->getActivityType($event),
-        ]);
+        $this->activity()
+            ->create(
+                [
+                    'user_id' => auth()->id(),
+                    'type' => $this->getActivityType($event),
+                ]
+            );
     }
 
     /**

@@ -31,12 +31,14 @@ class RepliesController extends Controller
     }
 
 
-    public function store ($channelId, Thread $thread, CreatePostRequest $form)
+    public function store($channelId, Thread $thread, CreatePostRequest $form)
     {
-        $reply = $thread->addReply([
+        $reply = $thread->addReply(
+            [
             'body' => request('body'),
             'user_id' => auth()->id()
-        ]);
+            ]
+        );
         
         return $reply->load('owner');
     }
@@ -70,20 +72,9 @@ class RepliesController extends Controller
     {
         $this->authorize('update', $reply);
 
-        try {
-            request()->validate(['body' => 'required|spamfree']);
+        request()->validate(['body' => 'required|spamfree']);
 
-            $reply->update(['body' => request('body')]);
-
-        } catch (\Exception $e) {
-
-            return response(
-                'Sorry, your reply could not be updated', 
-                422
-            );
-        }
-
-        
+        $reply->update(['body' => request('body')]);
     }
     
 }

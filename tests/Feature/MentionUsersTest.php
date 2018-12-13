@@ -42,4 +42,15 @@ class MentionUsersTest extends TestCase
         $this->assertCount(1, $jane->notifications);
 
     }
+
+    public function test_can_fetch_all_users_autocomplete()
+    {
+        create('App\User', ['name' => 'johndoe']);
+        create('App\User', ['name' => 'johndoe2']);
+        create('App\User', ['name' => 'janedoe']);
+        
+        $results = $this->json('GET', '/api/users', ['name' => 'john']);
+        
+        $this->assertCount(2, $results->json());
+    }
 }

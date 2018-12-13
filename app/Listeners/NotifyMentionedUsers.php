@@ -28,14 +28,12 @@ class NotifyMentionedUsers
      */
     public function handle(ThreadReceivedNewReply $event)
     {
-        // gives all user instances that exists in the database.
-        collect($event->reply->mentionedUsers())
-            ->map(function ($name) {
-                return User::where('name', $name)->first();
-            })
-            ->filter()
+        // Collect an array of mentioned users.
+        // map over this array and return a user instance.
+        $users = User::whereIn('name', $event->reply->mentionedUsers())
+            ->get()
             ->each(function ($user) use ($event) {
                 $user->notify(new YouWereMentioned($event->reply));
-        });
+            });
     }
 }

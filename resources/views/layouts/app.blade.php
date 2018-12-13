@@ -43,6 +43,8 @@
             flex: 1;
         }
     </style>
+
+    @yield('head')
 </head>
 <body>
     <div id="app">
@@ -54,5 +56,6 @@
 
         <example-component message="{{ session('flash') }}"></example-component>
     </div>
+    @yield('scripts')
 </body>
 </html>
