@@ -1,23 +1,57 @@
 <template>
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card card-default">
-                    <div class="card-header">Example Component</div>
-
-                    <div class="card-body">
-                        I'm an example component.
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div 
+        class="alert alert-flash" 
+        :class="'alert-'+level" 
+        role="alert" 
+        v-show="show" 
+        v-text="body">
     </div>
 </template>
 
 <script>
     export default {
-        mounted() {
-            console.log('Component mounted.')
+
+        props: ['message'],
+
+        data() {
+            return {
+                body: '',
+                level: 'success',
+                show: false
+            }
+        },
+
+        created() {
+            if (this.message) {
+                this.flash(this.message);
+            }
+
+            window.events.$on(
+                'flash', data => this.flash(data)
+            );
+            
+        },
+
+        methods: {
+            flash(data) {
+                this.body = data.message;
+                this.level = data.level;
+                this.show = true;
+                this.hide();
+            },
+            hide() {
+                setTimeout(() => {
+                    this.show = false;
+                }, 3000);
+            }
         }
     }
 </script>
+
+<style>
+    .alert-flash {
+        position: fixed;
+        right: 25px;
+        bottom: 25px;
+    }
+</style>

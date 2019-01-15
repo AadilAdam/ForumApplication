@@ -18,6 +18,12 @@ window.Vue = require('vue');
  */
 
 Vue.component('example-component', require('./components/ExampleComponent.vue'));
+Vue.component('paginator', require('./components/Paginator.vue'));
+Vue.component('favorite', require('./components/Favorite.vue'));
+Vue.component('subscribe-button', require('./components/SubscribeButton.vue'));
+Vue.component('user-notifications', require('./components/UserNotifications.vue'));
+
+Vue.component('thread-view', require('./pages/Thread.vue'));
 
 // const files = require.context('./', true, /\.vue$/i)
 
