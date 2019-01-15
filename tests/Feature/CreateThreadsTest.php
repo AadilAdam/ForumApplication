@@ -8,31 +8,29 @@ use Tests\TestCase;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 //use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
+use App\Activity;
 
 class CreateThreadsTest extends TestCase
 {
     /**
-     * A basic test example.
+     * A test for authorized users.
      *
-     * @return void
      */
     public function test_authenticated_user_create_threads()
     {
         // given a authenticated user
-        $this->actingAs(factory('App\User')->create());
-        //create a new thread
+        //$this->actingAs(factory('App\User')->create());
+        $this->signIn();
 
+        //create a new thread
+        $thread = make('App\Thread');
         //when we post it to the server, we  need to give it an array and not an object.
         //raw() returns an array., make() returns an object.
-        $thread = factory('App\Thread')->make();
-
-        $this->post('/threads', $thread->toArray());
-
-        //visit the thread page
-        $response = $this->get($thread->path());
+        $response = $this->post('/threads', $thread->toArray());
 
         //see the new thread.
-        $response->assertSee($thread->title)
+        $this->get($response->headers->get('Location'))
+            ->assertSee($thread->title)
             ->assertSee($thread->body);
     }
 
@@ -40,13 +38,93 @@ class CreateThreadsTest extends TestCase
      * test for unauthorized users.
      * 
      */
-    function test_guest_can_create_threads()
+    public function test_guests_cannot_create_threads()
     {
-        $this->expectException('Illuminate\Auth\AuthenticationException');
+        $this->withExceptionHandling();
 
-        $thread = factory('App\Thread')->make();
+        $this->get('/threads/create')
+            ->assertRedirect('/login');
+        
+        $this->post('/threads')
+            ->assertRedirect('/login');
+    }
 
-        $this->post('/threads', $thread->toArray());
+    /**
+     * @test to check if thread required s a title.
+     */
+    public function testThreadRequiresTitle()
+    {
+        $this->publishThread(['title' => null])
+            ->assertSessionHasErrors('title');
+    }
+    /** 
+     * @test 
+     */
+    function testThreadRequiresBody()
+    {
+        $this->publishThread(['body' => null])
+            ->assertSessionHasErrors('body');
+    }
 
+    /**
+     * @test for aunthorized users to not delete threads.
+     * 
+     */
+    function testUnauthorizedUserMaynotDeleteThreads()
+    {
+        $this->withExceptionHandling();
+        $thread = create('App\Thread');
+        $response = $this->delete($thread->path());
+        $response->assertRedirect('/login');
+
+        $this->signIn();
+        $this->delete($thread->path())->assertRedirect('/login');
+
+    }
+    /**
+     * @test for authorized users to delete threads
+     */
+    function testAuthorizedUserCanDeleteThreads()
+    {
+        $this->signIn();
+
+        $thread = create('App\Thread', [
+            'user_id' => auth()->id()
+        ]);
+        $reply = create('App\Reply', [
+            'thread_id' => $thread->id
+        ]);
+
+        $this->json('DELETE', $thread->path());
+        //$response->assertStatus(204);
+
+        $this->assertDatabaseMissing('threads', [
+            'id' => $thread->id
+        ]);
+        $this->assertDatabaseMissing('replies', [
+            'id' => $reply->id
+        ]);
+        $this->assertDatabaseMissing('activities', [
+            'subject_id' => $thread->id,
+            'subject_type' => get_class($thread)
+        ]);
+
+        // $this->assertDatabaseMissing('activities', [
+        //     'subject_id' => $reply->id,
+        //     'subject_type' => get_class($reply)
+        // ]);
+
+        // $this->assertEquals(0, Activity::count());
+
+    }
+
+    protected function publishThread($overrides = [])
+    {
+        $this->withExceptionHandling()
+            ->signIn();
+
+        $thread = make('App\Thread', $overrides);
+
+        return $this->post('/threads', $thread->toArray());
     }
 }

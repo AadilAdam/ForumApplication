@@ -7,6 +7,7 @@ use App\Channel;
 use Illuminate\Http\Request;
 use Auth;
 use App\Filters\ThreadFilters;
+use Carbon\Carbon;
 
 class ThreadsController extends Controller
 {
@@ -27,32 +28,6 @@ class ThreadsController extends Controller
      */
     public function index(Channel $channel, ThreadFilters $filters)
     {
-        //$threads = $this->getThreads($channel);
-        
-
-        /*if ($channel->exists)
-        {
-            //dd($channel);
-            $threads = $channel->threads()->latest();
-            //dd($threads);
-
-        } else {
-            
-            //dd($channel);
-            $threads = Thread::latest();
-        }
-
-        if($username = request('by'))
-        {
-            $user = Thread::where('name', $username)->firstOrFail();
-
-            $threads->where('user_id', $user->id);
-        }
-        //dd($threads);
-        $threads = $threads->get();*/
-
-        //return view('threads.index', compact('threads'));
-
         $threads = $this->getThreads($channel, $filters);
 
         if (request()->wantsJson()) {
@@ -84,22 +59,23 @@ class ThreadsController extends Controller
 
         //validate that the title attribute is required.
         $this->validate($request, [
-            'title' => 'required',
-            'body' => 'required',
-            'channel_id' => 'required|exists:channels, id'
+            'title' => 'required|spamfree',
+            'body' => 'required|spamfree',
+            'channel_id' => 'required|exists:channels,id'
         ]);
 
         //dd($request->all());
         $thread = Thread::create([
-            'user_id' => auth()->id,
+            'user_id' => auth()->id(),
             'channel_id' =>request('channel_id'),
             'title' => $request->input('title'),
             'body' => $request->input('body')
         ]);
 
-        Session::flash('flash_message', 'Thread successfully added!');
+        //Session::flash('flash_message', 'Thread successfully added!');
 
-        return redirect($thread->path());
+        return redirect($thread->path())
+            ->with('flash', 'Your thread has been published.');
     }
 
     /**
@@ -108,13 +84,17 @@ class ThreadsController extends Controller
      * @param  \App\Thread  $thread
      * @return \Illuminate\Http\Response
      */
-    public function show($channelId, Thread $thread)
+    public function show($channel, Thread $thread)
     {
+        if (auth()->check())
+        {
+            auth()->user()->read($thread);
+        }
+        // $key = sprintf("users.%s.visits.%s", auth()->id(), $thread->id);
 
-        return view('threads.show', [
-            'thread' => $thread,
-            'replies' => $thread->replies()->paginate(25)
-        ]);
+        // cache()->forever($key, Carbon::now());
+
+        return view('threads.show', compact('thread'));
     }
 
     /**
@@ -146,9 +126,13 @@ class ThreadsController extends Controller
      * @param  \App\Thread  $thread
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Thread $thread)
+    public function destroy(Channel $channel, Thread $thread)
     {
-        //
+        $this->authorize('update', $thread);
+        $thread->replies()->delete();
+        $thread->delete();
+
+        return redirect('/threads');
     }
 
     /**
@@ -167,7 +151,7 @@ class ThreadsController extends Controller
             $threads->where('channel_id', $channel->id);
         }
 
-        return $threads->get();
+        return $threads->paginate(10);
     }
 
 }

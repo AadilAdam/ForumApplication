@@ -4,7 +4,10 @@
 namespace App\Http\Controllers;
 
 use App\Thread;
+use App\Reply;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use App\Http\Requests\CreatePostRequest;
 
 
 class RepliesController extends Controller
@@ -12,32 +15,66 @@ class RepliesController extends Controller
     
     public function __construct()
     {
-        $this->middleware('auth');
+        $this->middleware('auth', ['except' => 'index']);
 
     }
 
-
-    public function store ($channelId, Thread $thread)
+    /**
+     * Fetch all relevant replies.
+     *
+     * @param int    $channelId
+     * @param Thread $thread
+     */
+    public function index($channelId, Thread $thread)
     {
-        //associate a reply to a thread.
-        //do the reply to the thread with the user id.
+        return $thread->replies()->paginate(1);
+    }
 
-        //validate that the title attribute is required.
-        $this->validate(request(), [
-            'reply' => 'required'
-        ]);
 
-        $thread->addReply([
-            'body' => request('reply'),
+    public function store($channelId, Thread $thread, CreatePostRequest $form)
+    {
+        $reply = $thread->addReply(
+            [
+            'body' => request('body'),
             'user_id' => auth()->id()
-        ]);
-
+            ]
+        );
         
-        //dd($thread);
+        return $reply->load('owner');
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Reply  $reply
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(Reply $reply)
+    {
+        $this->authorize('update', $reply);
+        $reply->delete();
+
+        if (request()->expectsJson()) {
+            return response(['status' => 'Reply deleted.']);
+        }
 
         return back();
     }
 
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Reply  $thread
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, Reply $reply)
+    {
+        $this->authorize('update', $reply);
 
+        request()->validate(['body' => 'required|spamfree']);
+
+        $reply->update(['body' => request('body')]);
+    }
     
 }

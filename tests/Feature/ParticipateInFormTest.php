@@ -9,36 +9,148 @@ use Tests\TestCase;
 class ParticipateInThreadsTest extends TestCase
 {
 
-    public function test_unauthenticated_users_may_not_add_replies()
+    public function test_unauthenticated_users_not_add_replies()
     {
-        $this->expectException('Illuminate\Auth\AuthenticationException');
-
-        $thread = factory('App\Thread')->create();
-
-        // we need a reply, set up from
-        $reply = factory('App\Reply')->create();
-
+        $this->withExceptionHandling();
         //$this->post('/threads/1/replies', []);
-        $this->post($thread->path() . '/replies', []);
+        $this->post('/threads/some-channel/1/replies', [])
+            ->assertRedirect('/login');
     }
-
-
 
     public function test_authenticated_user_participate_forum_threads()
     {
         //given authenticated user
-        $this->be($user = factory('App\User')->create());
+        //$this->be($user = factory('App\User')->create());
+        $this->signIn();
 
         //have existing thread
-        $thread = factory('App\Thread')->create();
+        $thread = create('App\Thread');
 
         // we need a reply, set up from
-        $reply = factory('App\Reply')->create();
+        $reply = make('App\Reply');
 
         //adds a reply to a thread, post it on the page
-        $this->post('/threads/' . $thread->id . '/replies', $reply->toArray());
+        $this->post($thread->path() . '/replies', $reply->toArray());
 
-        $this->get($thread->path())->assertSee($reply->body);
+        $this->assertDatabaseHas('replies', ['body' => $reply->body]);
+        $this->assertEquals(1, $thread->fresh()->replies_count);
+    }
+
+    function testReplyRequiresBody()
+    {
+        $this->withExceptionHandling();
+        $this->signIn();
+
+        $thread = create('App\Thread');
+
+        $reply = make('App\Reply', ['body' => null]);
+
+        $this->post($thread->path() . '/replies', $reply->toArray())
+            ->assertSessionHasErrors('body');
+
+    }
+
+    public function testUnauthorizedUserscantDeleteReplies()
+    {
+        $this->withExceptionHandling();
+
+        $reply = create('App\Reply');
+
+        $this->delete("/replies/{$reply->id}")
+            ->assertRedirect("/login");
+
+        $this->signIn()
+            ->delete("/replies/{$reply->id}")
+            ->assertStatus(403);
+        
+    }
+
+    
+
+    public function testAuthorizedUserCanDeleteReplies()
+    {
+        $this->signIn();
+
+        $reply = create('App\Reply', ['user_id' => auth()->id()]);
+
+        $this->delete("/replies/{$reply->id}")->assertStatus(302);
+
+        $this->assertDatabaseMissing('replies', ['id' => $reply->id]);
+
+    }
+
+    /** @test */
+    function testUnauthorizedUsersCantUpdateReplies()
+    {
+        $this->withExceptionHandling();
+
+        $reply = create('App\Reply');
+
+        $this->patch("/replies/{$reply->id}")
+            ->assertRedirect('login');
+        
+        $this->signIn()
+            ->patch("/replies/{$reply->id}")
+            ->assertStatus(403);
+    }
+
+     /** @test */
+    function testAuthorizedUsersCanUpdateReplies()
+    {
+        $this->signIn();
+
+        $reply = create('App\Reply', ['user_id' => auth()->id()]);
+
+
+        $updatedReply = 'You been changed.';
+
+        $this->patch("/replies/{$reply->id}", ['body' => $updatedReply]);
+        
+        $this->assertDatabaseHas('replies', ['id' => $reply->id, 'body' => $updatedReply]);
+    }
+
+    function test_replies_that_contain_spam_not_created()
+    {
+        $this->withExceptionHandling();
+        $this->signIn();
+
+        //have existing thread
+        $thread = create('App\Thread');
+
+        // we need a reply, set up from
+        $reply = make('App\Reply', [
+            'body' => 'some invalid spam words.'
+        ]);
+
+        //adds a reply to a thread, post it on the page
+        $this->json('post', $thread->path() . '/replies', $reply->toArray())
+            ->assertStatus(422);
+    }
+
+    function test_user_may_add_reply_once_minute()
+    {
+        $this->withExceptionHandling();
+
+        $this->signIn();
+
+        //have existing thread
+        $thread = create('App\Thread');
+
+        // we need a reply, set up from
+        $reply = make('App\Reply', [
+            'body' => 'My simple reply.'
+        ]);
+
+        //adds a reply to a thread, post it on the page
+        $this->post($thread->path() . '/replies', $reply->toArray())
+            ->assertStatus(201);
+
+
+            //adds a reply to a thread, post it on the page
+        $this->post($thread->path() . '/replies', $reply->toArray())
+            ->assertStatus(429);
+
+
     }
 
 }
